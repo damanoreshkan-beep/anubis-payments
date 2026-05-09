@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Light DOM, CSS injected globally — every custom rule below has to scope
+ * itself with `.aw-payments-scope` ancestor so we don't clobber the host
+ * page's own .glass / .btn-glow / etc. Tailwind utilities are auto-scoped
+ * via `important: '.aw-payments-scope'` in tailwind.config.js. */
+
+.aw-payments-scope .glass {
+    background: rgba(139, 92, 246, 0.06);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(139, 92, 246, 0.18);
+}
+
+.aw-payments-scope .btn-glow {
+    position: relative;
+    overflow: hidden;
+}
+.aw-payments-scope .btn-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+    pointer-events: none;
+}
+.aw-payments-scope .btn-glow:hover::after { transform: translateX(100%); }
+
+.aw-payments-scope .gold-text {
+    color: transparent;
+    background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+/* Tier card highlighted state — used to mark the recommended/popular
+ * plan with a more intense violet halo. */
+.aw-payments-scope .tier-card-pop {
+    background: linear-gradient(180deg, rgba(124,58,237,.15) 0%, rgba(34,211,238,.05) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.45);
+    box-shadow: 0 8px 32px rgba(124,58,237,.18);
+}
