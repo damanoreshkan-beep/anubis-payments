@@ -199,16 +199,15 @@ interface MethodProps {
 }
 
 function PaymentMethod({ label, hint, url, qrSource, t, accent, icon }: MethodProps) {
-    const [showQr, setShowQr] = useState(false)
     const [generatedQr, setGeneratedQr] = useState<string | null>(null)
 
     useEffect(() => {
-        if (qrSource !== 'generate' || !showQr || generatedQr) return
-        // High error-correction so a tiny logo overlay still scans.
+        if (qrSource !== 'generate' || generatedQr) return
+        // High error-correction so a tiny logo overlay would still scan.
         QRCode.toString(url, { type: 'svg', errorCorrectionLevel: 'H', margin: 1, color: { dark: '#070612', light: '#ffffff' } })
             .then(svg => setGeneratedQr(svg))
             .catch(() => { /* leave empty */ })
-    }, [qrSource, showQr, url, generatedQr])
+    }, [qrSource, url, generatedQr])
 
     return (
         <div class={`glass rounded-2xl p-4 flex flex-col gap-3 bg-gradient-to-br ${accent}`}>
@@ -221,41 +220,32 @@ function PaymentMethod({ label, hint, url, qrSource, t, accent, icon }: MethodPr
                     <div class="text-[11px] text-gray-400 truncate">{hint}</div>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn-glow flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow-md shadow-brand-600/30"
-                >
-                    {t.openLink}
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </a>
-                <button
-                    type="button"
-                    onClick={() => setShowQr(v => !v)}
-                    aria-label={t.scanQr}
-                    title={t.scanQr}
-                    class={`w-9 h-9 rounded-xl border ${showQr ? 'border-brand-400 bg-brand-500/15' : 'border-brand-500/30 bg-brand-500/5'} hover:border-brand-400 hover:bg-brand-500/15 transition flex items-center justify-center`}
-                >
-                    <QrIcon />
-                </button>
-            </div>
-            {showQr && (
-                <div class="rounded-xl overflow-hidden bg-white p-2 flex items-center justify-center" style="min-height:140px">
-                    {qrSource === 'generate' ? (
-                        generatedQr ? (
-                            <div class="w-full max-w-[180px]" dangerouslySetInnerHTML={{ __html: generatedQr }} />
-                        ) : (
-                            <div class="text-xs text-gray-400">{t.loading}</div>
-                        )
+            {/* QR is rendered up-front — visitors don't have to click
+                anything to scan from a phone. Mono renders client-side
+                via the qrcode lib; Donatello / DonatePay are inlined
+                JPEGs from the bundle. */}
+            <div class="rounded-xl overflow-hidden bg-white p-2 flex items-center justify-center" style="min-height:140px">
+                {qrSource === 'generate' ? (
+                    generatedQr ? (
+                        <div class="w-full max-w-[180px]" dangerouslySetInnerHTML={{ __html: generatedQr }} />
                     ) : (
-                        <img src={qrSource} alt={label} class="max-w-[180px] w-full h-auto" />
-                    )}
-                </div>
-            )}
+                        <div class="text-xs text-gray-400">{t.loading}</div>
+                    )
+                ) : (
+                    <img src={qrSource} alt={label} class="max-w-[180px] w-full h-auto" />
+                )}
+            </div>
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-glow inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow-md shadow-brand-600/30"
+            >
+                {t.openLink}
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </a>
         </div>
     )
 }
@@ -263,12 +253,6 @@ function PaymentMethod({ label, hint, url, qrSource, t, accent, icon }: MethodPr
 const CheckIcon = () => (
     <svg class="w-4 h-4 text-egypt-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-)
-
-const QrIcon = () => (
-    <svg class="w-4 h-4 text-brand-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 4h2m-2-4h6m-3 0v6" />
     </svg>
 )
 
