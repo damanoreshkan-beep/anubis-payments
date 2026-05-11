@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'preact/hooks'
 import { createClient, type SupabaseClient, type Session } from '@supabase/supabase-js'
 import QRCode from 'qrcode'
 import { copyFor, type T } from './locales'
+import { fetchRates, readCachedRates, isFresh, type Rates } from './lib/rates'
 import qrDonatelloUrl from './assets/qr-donatello.jpg'
 import qrDonatepayUrl from './assets/qr-donatepay.jpg'
 
@@ -46,7 +47,8 @@ const DONATEPAY_URL = 'https://donatepay.ru/don/AnubisWorld'
 interface Tier {
     id: 'vip' | 'premium' | 'ultra'
     nameKey: 'tierVipName' | 'tierPremiumName' | 'tierUltraName'
-    priceKey: 'tierVipPrice' | 'tierPremiumPrice' | 'tierUltraPrice'
+    /** Price in hryvnia — converted on the fly to USD / RUB. */
+    priceUAH: number
     privates: number
     homes: number
     kitKey: 'perkKitVip' | 'perkKitPremium' | 'perkKitUltra'
@@ -55,9 +57,9 @@ interface Tier {
 }
 
 const TIERS: Tier[] = [
-    { id: 'vip',     nameKey: 'tierVipName',     priceKey: 'tierVipPrice',     privates: 1, homes: 2, kitKey: 'perkKitVip',     extras: ['warp'] },
-    { id: 'premium', nameKey: 'tierPremiumName', priceKey: 'tierPremiumPrice', privates: 2, homes: 3, kitKey: 'perkKitPremium', extras: ['warp'], popular: true },
-    { id: 'ultra',   nameKey: 'tierUltraName',   priceKey: 'tierUltraPrice',   privates: 3, homes: 4, kitKey: 'perkKitUltra',   extras: ['warp', 'rtp'] },
+    { id: 'vip',     nameKey: 'tierVipName',     priceUAH:  29, privates: 1, homes: 2, kitKey: 'perkKitVip',     extras: ['warp'] },
+    { id: 'premium', nameKey: 'tierPremiumName', priceUAH:  99, privates: 2, homes: 3, kitKey: 'perkKitPremium', extras: ['warp'], popular: true },
+    { id: 'ultra',   nameKey: 'tierUltraName',   priceUAH: 199, privates: 3, homes: 4, kitKey: 'perkKitUltra',   extras: ['warp', 'rtp'] },
 ]
 
 export function PaymentsWidget({ supabaseUrl, supabaseKey, lang }: Props) {
@@ -103,6 +105,19 @@ export function PaymentsWidget({ supabaseUrl, supabaseKey, lang }: Props) {
 }
 
 function PaymentsBody({ t }: { t: T }) {
+    // Seed from cache so the price subtitle is filled in on first
+    // paint when the user has visited before. Refetch in the
+    // background if the cached rates are older than the TTL or absent.
+    const [rates, setRates] = useState<Rates | null>(() => readCachedRates())
+    useEffect(() => {
+        if (isFresh(rates)) return
+        let cancelled = false
+        fetchRates().then(r => { if (!cancelled) setRates(r) }).catch(() => { /* keep UAH-only */ })
+        return () => { cancelled = true }
+    // Intentionally empty deps — only run once per widget mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
     return (
         <div class="w-full mx-auto max-w-5xl text-gray-100 space-y-8">
             <div class="text-center">
@@ -113,7 +128,7 @@ function PaymentsBody({ t }: { t: T }) {
             </div>
 
             <div class="grid gap-4 md:grid-cols-3">
-                {TIERS.map(tier => <TierCard key={tier.id} tier={tier} t={t} />)}
+                {TIERS.map(tier => <TierCard key={tier.id} tier={tier} t={t} rates={rates} />)}
             </div>
 
             <div class="glass rounded-2xl p-5 space-y-2">
@@ -153,12 +168,25 @@ function PaymentsBody({ t }: { t: T }) {
                     />
                 </div>
             </div>
+
+            <div class="pt-2 text-center text-xs text-gray-500">
+                {t.supportPrefix}{' '}
+                <a href="https://t.me/AnubisWorld_Support" target="_blank" rel="noopener noreferrer"
+                   class="text-brand-300 hover:text-brand-200 font-mono">
+                    @AnubisWorld_Support
+                </a>
+            </div>
         </div>
     )
 }
 
-function TierCard({ tier, t }: { tier: Tier; t: T }) {
+function TierCard({ tier, t, rates }: { tier: Tier; t: T; rates: Rates | null }) {
     const popular = tier.popular
+    // Round USD to 2 decimals, RUB to whole rubles — looks tighter than
+    // raw floating-point output. Fall back to UAH-only when rates fail
+    // to load (network down, ad blocker, etc.).
+    const usd = rates ? (tier.priceUAH * rates.USD).toFixed(2) : null
+    const rub = rates ? Math.round(tier.priceUAH * rates.RUB) : null
     return (
         <div
             class={`relative rounded-2xl p-5 ${popular ? 'tier-card-pop' : 'glass'} flex flex-col gap-4`}
@@ -170,7 +198,12 @@ function TierCard({ tier, t }: { tier: Tier; t: T }) {
             )}
             <div class="text-center">
                 <div class="text-xs uppercase tracking-widest text-brand-300 mb-1">{t[tier.nameKey]}</div>
-                <div class="text-3xl font-bold gold-text">{t[tier.priceKey]}</div>
+                <div class="text-3xl font-bold gold-text">{tier.priceUAH} ₴</div>
+                {usd && rub && (
+                    <div class="text-[11px] text-gray-400 mt-1 font-mono">
+                        ≈ ${usd} · ≈ {rub} ₽
+                    </div>
+                )}
             </div>
             <ul class="space-y-2 text-sm">
                 <li class="flex items-center gap-2"><CheckIcon /> {t.perkPrivates(tier.privates)}</li>

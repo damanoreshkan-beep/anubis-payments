@@ -38,6 +38,7 @@ export const COPY = {
 
         openLink: 'Open',
         scanQr: 'Scan QR code',
+        supportPrefix: 'Issues or questions? Reach us on Telegram —',
     },
     ru: {
         title: 'Поддержать сервер',
@@ -74,6 +75,7 @@ export const COPY = {
 
         openLink: 'Открыть',
         scanQr: 'Скан QR-кода',
+        supportPrefix: 'По всем сложностям и вопросам пиши в Telegram —',
     },
     uk: {
         title: 'Підтримати сервер',
@@ -110,6 +112,7 @@ export const COPY = {
 
         openLink: 'Відкрити',
         scanQr: 'Скан QR-коду',
+        supportPrefix: 'З усіма складнощами та питаннями — у Telegram до',
     },
     de: {
         title: 'Server unterstützen',
@@ -146,6 +149,7 @@ export const COPY = {
 
         openLink: 'Öffnen',
         scanQr: 'QR-Code scannen',
+        supportPrefix: 'Probleme oder Fragen? Schreib uns auf Telegram —',
     },
     pl: {
         title: 'Wesprzyj serwer',
@@ -182,6 +186,7 @@ export const COPY = {
 
         openLink: 'Otwórz',
         scanQr: 'Zeskanuj QR',
+        supportPrefix: 'Pytania lub problemy? Napisz na Telegrama —',
     },
 } satisfies Record<Locale, Record<string, any>>
 
