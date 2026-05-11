@@ -198,10 +198,17 @@ function TierCard({ tier, t, rates }: { tier: Tier; t: T; rates: Rates | null })
             )}
             <div class="text-center">
                 <div class="text-xs uppercase tracking-widest text-brand-300 mb-1">{t[tier.nameKey]}</div>
-                <div class="text-3xl font-bold gold-text">{tier.priceUAH} ₴</div>
+                <div class="text-3xl font-bold gold-text leading-none">{tier.priceUAH} ₴</div>
                 {usd && rub && (
-                    <div class="text-[11px] text-gray-400 mt-1 font-mono">
-                        ≈ ${usd} · ≈ {rub} ₽
+                    // Secondary prices: same readable size as the
+                    // tier perks list, slightly muted so the UAH
+                    // amount still wins the visual hierarchy. The
+                    // "≈" prefix signals these are conversions, not
+                    // separate prices.
+                    <div class="text-sm text-gray-300 mt-2 flex items-center justify-center gap-2 flex-wrap">
+                        <span>≈&nbsp;{rub}&nbsp;₽</span>
+                        <span class="text-brand-400/40">/</span>
+                        <span>≈&nbsp;${usd}</span>
                     </div>
                 )}
             </div>
