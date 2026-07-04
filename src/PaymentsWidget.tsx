@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef } from 'preact/hooks'
 import { createClient, type SupabaseClient, type Session } from '@supabase/supabase-js'
+import { animate, stagger, hover } from 'motion'
 import QRCode from 'qrcode'
 import { copyFor, type T } from './locales'
+
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
+const prefersReduced = () =>
+    typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
 import { fetchRates, readCachedRates, isFresh, type Rates } from './lib/rates'
 import qrDonatelloUrl from './assets/qr-donatello.jpg'
 import qrDonatepayUrl from './assets/qr-donatepay.jpg'
@@ -118,8 +123,31 @@ function PaymentsBody({ t }: { t: T }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // Motion: stagger the tier/method cards in on mount, and add a spring
+    // lift on hover. Scoped to this widget's root so it never touches other
+    // widgets on the page. Reduced-motion users get the static layout —
+    // the cards render at full opacity (no [data-anim] opacity:0 is set).
+    const reduce = prefersReduced()
+    const rootRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        const root = rootRef.current
+        if (!root || reduce) return
+        const items = [...root.querySelectorAll('[data-anim-in]')] as HTMLElement[]
+        animate(items, { opacity: [0, 1], y: [16, 0] },
+            { duration: 0.5, delay: stagger(0.06), ease: EASE })
+        const spring = { type: 'spring', stiffness: 320, damping: 26 } as const
+        const stops = [...root.querySelectorAll('[data-anim-hover]')].map((c) => {
+            const el = c as HTMLElement
+            return hover(el, () => {
+                animate(el, { y: -6, scale: 1.015 }, spring)
+                return () => animate(el, { y: 0, scale: 1 }, spring)
+            })
+        })
+        return () => stops.forEach((stop) => stop())
+    }, [reduce])
+
     return (
-        <div class="w-full mx-auto max-w-5xl text-gray-100 space-y-8">
+        <div ref={rootRef} class="w-full mx-auto max-w-5xl text-gray-100 space-y-8">
             <div class="text-center">
                 <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
                     <span class="gold-text">{t.title}</span>
@@ -128,7 +156,7 @@ function PaymentsBody({ t }: { t: T }) {
             </div>
 
             <div class="grid gap-4 md:grid-cols-3">
-                {TIERS.map(tier => <TierCard key={tier.id} tier={tier} t={t} rates={rates} />)}
+                {TIERS.map(tier => <TierCard key={tier.id} tier={tier} t={t} rates={rates} reduce={reduce} />)}
             </div>
 
             <div class="glass rounded-2xl p-5 space-y-2">
@@ -147,6 +175,7 @@ function PaymentsBody({ t }: { t: T }) {
                         t={t}
                         accent="from-amber-400/20 to-amber-400/5"
                         icon={<MonoIcon />}
+                        reduce={reduce}
                     />
                     <PaymentMethod
                         label={t.methodDonatelloLabel}
@@ -156,6 +185,7 @@ function PaymentsBody({ t }: { t: T }) {
                         t={t}
                         accent="from-blue-500/20 to-blue-500/5"
                         icon={<DonatelloIcon />}
+                        reduce={reduce}
                     />
                     <PaymentMethod
                         label={t.methodDonatePayLabel}
@@ -165,6 +195,7 @@ function PaymentsBody({ t }: { t: T }) {
                         t={t}
                         accent="from-emerald-500/20 to-emerald-500/5"
                         icon={<DonatePayIcon />}
+                        reduce={reduce}
                     />
                 </div>
             </div>
@@ -180,7 +211,7 @@ function PaymentsBody({ t }: { t: T }) {
     )
 }
 
-function TierCard({ tier, t, rates }: { tier: Tier; t: T; rates: Rates | null }) {
+function TierCard({ tier, t, rates, reduce }: { tier: Tier; t: T; rates: Rates | null; reduce: boolean }) {
     const popular = tier.popular
     // Round USD to 2 decimals, RUB to whole rubles — looks tighter than
     // raw floating-point output. Fall back to UAH-only when rates fail
@@ -189,6 +220,9 @@ function TierCard({ tier, t, rates }: { tier: Tier; t: T; rates: Rates | null })
     const rub = rates ? Math.round(tier.priceUAH * rates.RUB) : null
     return (
         <div
+            data-anim-in
+            data-anim-hover
+            style={reduce ? undefined : 'opacity:0'}
             class={`relative rounded-2xl p-5 ${popular ? 'tier-card-pop' : 'glass'} flex flex-col gap-4`}
         >
             {popular && (
@@ -236,9 +270,10 @@ interface MethodProps {
     t: T
     accent: string
     icon: any
+    reduce: boolean
 }
 
-function PaymentMethod({ label, hint, url, qrSource, t, accent, icon }: MethodProps) {
+function PaymentMethod({ label, hint, url, qrSource, t, accent, icon, reduce }: MethodProps) {
     const [generatedQr, setGeneratedQr] = useState<string | null>(null)
 
     useEffect(() => {
@@ -250,7 +285,12 @@ function PaymentMethod({ label, hint, url, qrSource, t, accent, icon }: MethodPr
     }, [qrSource, url, generatedQr])
 
     return (
-        <div class={`glass rounded-2xl p-4 flex flex-col gap-3 bg-gradient-to-br ${accent}`}>
+        <div
+            data-anim-in
+            data-anim-hover
+            style={reduce ? undefined : 'opacity:0'}
+            class={`glass rounded-2xl p-4 flex flex-col gap-3 bg-gradient-to-br ${accent}`}
+        >
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white/8 flex items-center justify-center flex-shrink-0">
                     {icon}
