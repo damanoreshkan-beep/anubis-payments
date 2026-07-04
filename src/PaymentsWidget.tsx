@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'preact/hooks'
-import { createClient, type SupabaseClient, type Session } from '@supabase/supabase-js'
+import { type SupabaseClient, type Session } from '@supabase/supabase-js'
 import { animate, stagger, hover } from 'motion'
 import QRCode from 'qrcode'
 import { copyFor, type T } from './locales'
@@ -7,7 +7,7 @@ import { copyFor, type T } from './locales'
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
 const prefersReduced = () =>
     typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
-import { fetchRates, readCachedRates, isFresh, type Rates } from '@anubis/widget-core'
+import { fetchRates, readCachedRates, isFresh, obtainSharedClient, type Rates } from '@anubis/widget-core'
 import qrDonatelloUrl from './assets/qr-donatello.jpg'
 import qrDonatepayUrl from './assets/qr-donatepay.jpg'
 
@@ -19,31 +19,6 @@ interface Props {
     mode?: 'web' | 'launcher'
 }
 
-// Coordinated single Supabase client. See the long comment in
-// anubis-cabinet for the rationale — race on refresh-token rotation
-// breaks getSession() in whichever client refreshes second.
-function obtainSharedClient(url?: string, key?: string): SupabaseClient | null {
-    if (typeof document === 'undefined') {
-        return url && key ? createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null
-    }
-    const ev = new CustomEvent('anubis-need-supabase', {
-        detail: {} as { client?: SupabaseClient },
-        bubbles: true,
-        composed: true,
-    })
-    document.dispatchEvent(ev)
-    const provided = (ev.detail as { client?: SupabaseClient }).client
-    if (provided) return provided
-    if (!url || !key) return null
-    const fresh = createClient(url, key, {
-        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-    })
-    document.addEventListener('anubis-need-supabase', (e) => {
-        const d = (e as CustomEvent).detail as { client?: SupabaseClient }
-        if (d && !d.client) d.client = fresh
-    })
-    return fresh
-}
 
 const MONO_URL      = 'https://send.monobank.ua/jar/75xtF3s12M'
 const DONATELLO_URL = 'https://donatello.to/AnubisWorld'
