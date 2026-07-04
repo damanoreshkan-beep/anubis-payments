@@ -7,7 +7,7 @@ import { copyFor, type T } from './locales'
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
 const prefersReduced = () =>
     typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
-import { fetchRates, readCachedRates, isFresh, obtainSharedClient, type Rates } from '@anubis/widget-core'
+import { fetchRates, readCachedRates, isFresh, obtainSharedClient, type Rates } from '@anubis/core'
 import qrDonatelloUrl from './assets/qr-donatello.jpg'
 import qrDonatepayUrl from './assets/qr-donatepay.jpg'
 
