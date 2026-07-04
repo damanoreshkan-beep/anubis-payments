@@ -35,10 +35,25 @@
     background-clip: text;
 }
 
-/* Tier card highlighted state — used to mark the recommended/popular
- * plan with a more intense violet halo. */
+/* Tier card highlighted state — marks the recommended/popular plan with
+ * a violet halo plus a violet→cyan gradient ring (masked ::before). */
 .aw-payments-scope .tier-card-pop {
-    background: linear-gradient(180deg, rgba(124,58,237,.15) 0%, rgba(34,211,238,.05) 100%);
-    border: 1px solid rgba(168, 85, 247, 0.45);
-    box-shadow: 0 8px 32px rgba(124,58,237,.18);
+    position: relative;
+    background: linear-gradient(180deg, rgba(124,58,237,.16) 0%, rgba(34,211,238,.05) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    box-shadow: 0 10px 40px rgba(124,58,237,.22);
+}
+.aw-payments-scope .tier-card-pop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem; /* matches rounded-2xl */
+    padding: 1px;
+    background: linear-gradient(135deg, #a855f7, #22d3ee);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    opacity: .55;
+    pointer-events: none;
 }

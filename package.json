@@ -9,11 +9,12 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@anubis/ds": "github:damanoreshkan-beep/anubis-ds",
         "@supabase/supabase-js": "^2.105.1",
+        "motion": "^12.42.2",
         "preact": "^10.29.1",
         "preact-custom-element": "^4.6.0",
-        "qrcode": "^1.5.4",
-        "@anubis/ds": "github:damanoreshkan-beep/anubis-ds"
+        "qrcode": "^1.5.4"
     },
     "devDependencies": {
         "@preact/preset-vite": "^2.10.5",
