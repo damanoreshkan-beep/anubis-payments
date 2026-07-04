@@ -57,3 +57,25 @@
     opacity: .55;
     pointer-events: none;
 }
+
+/* Whale tier — gold halo + amber gradient ring, anchors the top of the ladder. */
+.aw-payments-scope .tier-card-legend {
+    position: relative;
+    background: linear-gradient(180deg, rgba(251,191,36,.14) 0%, rgba(245,158,11,.04) 100%);
+    border: 1px solid rgba(251,191,36,.5);
+    box-shadow: 0 10px 44px rgba(245,158,11,.22);
+}
+.aw-payments-scope .tier-card-legend::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    padding: 1px;
+    background: linear-gradient(135deg, #fcd34d, #f59e0b);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    opacity: .6;
+    pointer-events: none;
+}

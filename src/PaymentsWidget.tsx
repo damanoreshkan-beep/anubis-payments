@@ -50,21 +50,24 @@ const DONATELLO_URL = 'https://donatello.to/AnubisWorld'
 const DONATEPAY_URL = 'https://donatepay.ru/don/AnubisWorld'
 
 interface Tier {
-    id: 'vip' | 'premium' | 'ultra'
-    nameKey: 'tierVipName' | 'tierPremiumName' | 'tierUltraName'
+    id: 'vip' | 'premium' | 'ultra' | 'legend'
+    nameKey: 'tierVipName' | 'tierPremiumName' | 'tierUltraName' | 'tierLegendName'
     /** Price in hryvnia — converted on the fly to USD / RUB. */
     priceUAH: number
     privates: number
     homes: number
-    kitKey: 'perkKitVip' | 'perkKitPremium' | 'perkKitUltra'
-    extras: ('warp' | 'rtp')[]
+    kitKey: 'perkKitVip' | 'perkKitPremium' | 'perkKitUltra' | 'perkKitLegend'
+    extras: ('warp' | 'rtp' | 'cape' | 'title' | 'allCosmetics' | 'permVip')[]
     popular?: boolean
+    /** Whale tier — gold treatment, anchors the top of the ladder. */
+    legendary?: boolean
 }
 
 const TIERS: Tier[] = [
-    { id: 'vip',     nameKey: 'tierVipName',     priceUAH:  29, privates: 1, homes: 2, kitKey: 'perkKitVip',     extras: ['warp'] },
-    { id: 'premium', nameKey: 'tierPremiumName', priceUAH:  99, privates: 2, homes: 3, kitKey: 'perkKitPremium', extras: ['warp'], popular: true },
-    { id: 'ultra',   nameKey: 'tierUltraName',   priceUAH: 199, privates: 3, homes: 4, kitKey: 'perkKitUltra',   extras: ['warp', 'rtp'] },
+    { id: 'vip',     nameKey: 'tierVipName',     priceUAH:  49, privates: 1, homes: 2, kitKey: 'perkKitVip',     extras: ['warp'] },
+    { id: 'premium', nameKey: 'tierPremiumName', priceUAH: 149, privates: 2, homes: 3, kitKey: 'perkKitPremium', extras: ['warp'], popular: true },
+    { id: 'ultra',   nameKey: 'tierUltraName',   priceUAH: 349, privates: 3, homes: 4, kitKey: 'perkKitUltra',   extras: ['warp', 'rtp'] },
+    { id: 'legend',  nameKey: 'tierLegendName',  priceUAH: 999, privates: 5, homes: 6, kitKey: 'perkKitLegend',  extras: ['warp', 'rtp', 'permVip', 'cape', 'title', 'allCosmetics'], legendary: true },
 ]
 
 export function PaymentsWidget({ supabaseUrl, supabaseKey, lang }: Props) {
@@ -155,7 +158,7 @@ function PaymentsBody({ t }: { t: T }) {
                 <p class="text-sm text-gray-400 max-w-xl mx-auto">{t.subtitle}</p>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {TIERS.map(tier => <TierCard key={tier.id} tier={tier} t={t} rates={rates} reduce={reduce} />)}
             </div>
 
@@ -223,11 +226,16 @@ function TierCard({ tier, t, rates, reduce }: { tier: Tier; t: T; rates: Rates |
             data-anim-in
             data-anim-hover
             style={reduce ? undefined : 'opacity:0'}
-            class={`relative rounded-2xl p-5 ${popular ? 'tier-card-pop' : 'glass'} flex flex-col gap-4`}
+            class={`relative rounded-2xl p-5 ${tier.legendary ? 'tier-card-legend' : popular ? 'tier-card-pop' : 'glass'} flex flex-col gap-4`}
         >
-            {popular && (
+            {popular && !tier.legendary && (
                 <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand-500 to-violet-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
                     {t.tierMostPopular}
+                </span>
+            )}
+            {tier.legendary && (
+                <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-amber-500 text-black text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                    {t.tierTopBadge}
                 </span>
             )}
             <div class="text-center">
@@ -255,6 +263,18 @@ function TierCard({ tier, t, rates, reduce }: { tier: Tier; t: T; rates: Rates |
                 )}
                 {tier.extras.includes('rtp') && (
                     <li class="flex items-center gap-2"><CheckIcon /> {t.perkRtp}</li>
+                )}
+                {tier.extras.includes('permVip') && (
+                    <li class="flex items-center gap-2"><CheckIcon /> {t.perkPermVip}</li>
+                )}
+                {tier.extras.includes('cape') && (
+                    <li class="flex items-center gap-2"><CheckIcon /> {t.perkCape}</li>
+                )}
+                {tier.extras.includes('title') && (
+                    <li class="flex items-center gap-2"><CheckIcon /> {t.perkTitle}</li>
+                )}
+                {tier.extras.includes('allCosmetics') && (
+                    <li class="flex items-center gap-2"><CheckIcon /> {t.perkAllCosmetics}</li>
                 )}
             </ul>
         </div>
