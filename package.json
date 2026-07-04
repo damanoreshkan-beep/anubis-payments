@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@anubis/ds": "github:damanoreshkan-beep/anubis-ds",
+        "@anubis/widget-core": "github:damanoreshkan-beep/anubis-widget-core",
         "@supabase/supabase-js": "^2.105.1",
         "motion": "^12.42.2",
         "preact": "^10.29.1",
